@@ -9,6 +9,14 @@
   )
 )
 
+(defun indexBoard (board)
+  (let ((aux '()))
+    (matrixMap (function (lambda (el all)
+      (append el (list (len (push 0 aux))))
+    )) board)
+  )
+)
+
 (defun len (list)
   (if (null list)
     0
@@ -56,6 +64,10 @@
 
 (defun getElemValues (elem)
   (nth 0 elem)
+)
+
+(defun getElemIdx (elem)
+  (nth 2 elem)
 )
 
 (defun filterById (id list)
@@ -107,7 +119,7 @@
         (initialList (fillList (len (filterByGroupId board (getElemId elem)))))
         (existingValues (valuesInGroup board (getElemId elem)))
       )
-      (list (difference initialList existingValues) (getElemId elem))
+      (list (difference initialList existingValues) (getElemId elem) (getElemIdx elem))
     )
     elem
   )
@@ -121,6 +133,55 @@
   (matrixMap (function defineChoices) board)
 )
 
+(defun generateNewBoards (elem board)
+  (loop for choice in (getElemValues elem)
+    do (write-line (write-to-string choice))
+  )
+)
+
+(defun generateBoard (elem newElem board)
+  (matrixMap (function ))
+)
+
+(defun isEqual (elem1 elem2)
+  (= (getElemIdx elem1) (getElemIdx elem2))
+)
+
+(defun sameArray (arr1 arr2)
+  (= (len (difference arr1 arr2)) 0)
+)
+
+(defun searchSolution (board)
+  (loop for line in board
+    do (loop for elem in line
+      do (if (not (single (getElemValues elem)))
+        (loop for choice in (getElemValues elem)
+          do (let ((newElem (list (list choice) (getElemId elem) (getElemIdx elem))))
+            (let 
+              (
+                (newBoard (matrixMap (function (lambda (el all)
+                  (if (isEqual el elem)
+                    newElem
+                    el
+                  )))
+                  board)
+                )
+              )
+              (return-from searchSolution newBoard)
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+(defun formatBoard (board)
+  (matrixMap (function (lambda (el all)
+    (list (getElemValues el) (getElemId el))
+  )) board)
+)
+
 (defun printMap (matrix)
   (if (null matrix)
     ()
@@ -131,4 +192,4 @@
   )
 )
 
-(printMap (possibleChoices (board)))
+(printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board))))))
