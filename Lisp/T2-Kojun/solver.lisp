@@ -1,4 +1,4 @@
-(defun board ()
+(defun board6 ()
   '(
     (((0) 0) ((0) 1) ((4) 1) ((0) 1) ((2) 3) ((0) 4))
     (((0) 0) ((0) 2) ((3) 1) ((0) 3) ((0) 3) ((0) 3))
@@ -6,6 +6,21 @@
     (((0) 6) ((5) 7) ((0) 5) ((0) 9) ((0) 9) ((2) 10)) 
     (((0) 6) ((0) 7) ((0) 7) ((0) 8) ((3) 8) ((0) 10)) 
     (((6) 7) ((2) 7) ((0) 7) ((2) 8) ((0) 8) ((5) 8))
+  )
+)
+
+(defun board10 ()
+  '(
+    (((0) 0) ((0) 0) ((0) 1) ((0) 2) ((0) 5) ((0) 6) ((4) 6) ((0) 7) ((3) 7) ((5) 8)) 
+    (((0) 0) ((4) 0) ((0) 3) ((0) 2) ((0) 6) ((0) 6) ((6) 7) ((0) 7) ((0) 7) ((0) 8)) 
+    (((0) 0) ((0) 4) ((0) 3) ((0) 2) ((2) 2) ((0) 6) ((0) 7) ((4) 7) ((0) 8) ((0) 8)) 
+    (((0) 4) ((0) 4) ((0) 3) ((3) 2) ((0) 2) ((0) 16) ((0) 17) ((3) 8) ((2) 8) ((0) 20)) 
+    (((2) 4) ((5) 4) ((0) 9) ((1) 9) ((2) 9) ((0) 16) ((4) 16) ((0) 18) ((0) 19) ((0) 20)) 
+    (((0) 4) ((0) 4) ((0) 10) ((0) 16) ((6) 16) ((0) 16) ((0) 21) ((4) 22) ((0) 19) ((0) 20)) 
+    (((0) 10) ((0) 10) ((0) 10) ((6) 14) ((0) 14) ((0) 21) ((0) 21) ((0) 22) ((0) 19) ((0) 20)) 
+    (((0) 11) ((5) 10) ((0) 10) ((2) 14) ((0) 15) ((5) 22) ((0) 22) ((0) 22) ((0) 23) ((0) 20)) 
+    (((0) 11) ((0) 12) ((7) 14) ((0) 14) ((5) 14) ((0) 14) ((0) 22) ((0) 23) ((0) 23) ((0) 20)) 
+    (((0) 11) ((2) 12) ((0) 12) ((0) 13) ((4) 13) ((1) 13) ((0) 13) ((0) 23) ((3) 23) ((6) 23))
   )
 )
 
@@ -68,6 +83,14 @@
 
 (defun getElemIdx (elem)
   (nth 2 elem)
+)
+
+(defun getElemByIdx (board idx)
+  (loop for line in board
+    do (loop for elem in line
+      do (if (= (getElemIdx elem) idx) (return-from getElemByIdx elem))
+    )
+  )
 )
 
 (defun getBoardValues (board)
@@ -144,16 +167,6 @@
   (matrixMap (function defineChoices) board)
 )
 
-(defun generateNewBoards (elem board)
-  (loop for choice in (getElemValues elem)
-    do (write-line (write-to-string choice))
-  )
-)
-
-(defun generateBoard (elem newElem board)
-  (matrixMap (function ))
-)
-
 (defun isEqual (elem1 elem2)
   (= (getElemIdx elem1) (getElemIdx elem2))
 )
@@ -170,8 +183,8 @@
       (b (first (rest list)))
       (c (rest (rest list)))
       )
-      (if (and (single (list a)) (single (list b)))
-        (if (= a b)
+      (if (and (single a) (single b))
+        (if (= (getElemValues a) (getElemValues b))
           NIL
           (validNeighbours (cons b c))
         )
@@ -204,7 +217,48 @@
   (and
     (every (function validNeighbours) (getBoardValues board))
     (every (function validNeighbours) (transpose (getBoardValues board)))
+    (isDrecreaseByColumnGroup board)
   )
+)
+
+(defun isDrecreaseByColumnGroup (board)
+  (let ((lenBoard (len board)))
+    (dotimes (n (* lenBoard (- lenBoard 1)))
+      (let (
+        (elemAbove (getElemByIdx board (+ n 1)))
+        (elemUnder (getElemByIdx board (+ (+ n 1) lenBoard)))
+      )
+        (if (= (getElemId elemAbove) (getElemId elemUnder))
+          (if
+            (<
+              (getElemValues (getElemValues elemAbove))
+              (getElemValues (getElemValues elemUnder))
+            )
+            (return-from isDrecreaseByColumnGroup NIL)
+          )
+        )
+      )
+    )
+    T
+  )
+)
+
+(defun allSingle (board)
+  (let
+    ((filteredList (
+      filter
+      (function notNil)
+      (myMap 
+        (function (lambda (elems) (filter (function (lambda (el) (not (single el)))) elems)))
+        (getBoardValues board)
+      )
+    )))
+    (= (len filteredList) 0)
+  )
+)
+
+(defun notNil (elem)
+  (not (equal elem NIL))
 )
 
 (defun cars (matrix)
@@ -232,25 +286,32 @@
   )
 )
 
+(defun firstWithPossibles (board)
+  (loop for line in board
+    do (loop for elem in line
+      do (if (not (single (getElemValues elem)))
+        (return-from firstWithPossibles elem)  
+      )
+    )
+  )
+)
+
 (defun searchSolution (board)
-  (if (valid stop)
-    board
-    (loop for line in board
-      do (loop for elem in line
-        do (if (not (single (getElemValues elem)))
-          (loop for choice in (getElemValues elem)
-            do (let ((newElem (list (list choice) (getElemId elem) (getElemIdx elem))))
-              (let 
-                (
-                  (newBoard (matrixMap (function (lambda (el all)
-                    (if (isEqual el elem)
-                      newElem
-                      el
-                    )))
-                    board)
-                  )
+  (cond
+    ((allSingle board) (if (valid board) board NIL))
+    (t
+      (let ((elem (firstWithPossibles board)))
+        (loop for choice in (getElemValues elem)
+          do (let ((newElem (list (list choice) (getElemId elem) (getElemIdx elem))))
+            (let (
+              (newBoard
+                (matrixMap 
+                  (function (lambda (el all) (if (isEqual el elem) newElem el)))
+                  board
                 )
-                (return-from searchSolution (searchSolution (possibleChoices newBoard)))
+              ))
+              (let ((result (searchSolution (possibleChoices newBoard))))
+                (when result (return-from searchSolution result))
               )
             )
           )
@@ -259,6 +320,7 @@
     )
   )
 )
+
 
 (defun formatBoard (board)
   (matrixMap (function (lambda (el all)
@@ -276,8 +338,7 @@
   )
 )
 
-;; (printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board))))))
-;; (write (validNeighbours '(1 2 3 4 4)))
-;; (write (transpose '((1 2 3) (4 5 6))))
-(write (valid '(((1) (2)) ((1) (2)))))
-(write (decrease '(5 3 1)))
+(write-line "Solucao do tabuleiro 6x6") ;17s
+(printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board6))))))
+;; (write-line "Solucao do tabuleiro 10x10")
+;; (printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board10))))))
