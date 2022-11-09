@@ -363,5 +363,6 @@
 
 (write-line "Solucao do tabuleiro 6x6")
 (printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board6))))))
-(write-line "Solucao do tabuleiro 8x8")
-(printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board8))))))
+;; Tempo indeterminado para solução, no mínimo mais de 10 minutos
+;; (write-line "Solucao do tabuleiro 8x8")
+;; (printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board8))))))
