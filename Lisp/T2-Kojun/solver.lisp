@@ -163,16 +163,16 @@
         (existingValues (valuesInGroup board (getElemId elem)))
       )
       (list
-        (difference (difference initialList existingValues) (neighboursValues board elem))
+        (reverse (difference (difference initialList existingValues) (neighboursValues board elem)))
         (getElemId elem)
         (getElemIdx elem)
       )
     )
     (list 
-      (difference
+      (reverse (difference
         (difference (getElemValues elem) (valuesInGroup board (getElemId elem)))
         (neighboursValues board elem)
-      )
+      ))
       (getElemId elem)
       (getElemIdx elem)
     )
