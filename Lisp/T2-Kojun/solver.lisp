@@ -9,18 +9,16 @@
   )
 )
 
-(defun board10 ()
+(defun board8 ()
   '(
-    (((0) 0) ((0) 0) ((0) 1) ((0) 2) ((0) 5) ((0) 6) ((4) 6) ((0) 7) ((3) 7) ((5) 8)) 
-    (((0) 0) ((4) 0) ((0) 3) ((0) 2) ((0) 6) ((0) 6) ((6) 7) ((0) 7) ((0) 7) ((0) 8)) 
-    (((0) 0) ((0) 4) ((0) 3) ((0) 2) ((2) 2) ((0) 6) ((0) 7) ((4) 7) ((0) 8) ((0) 8)) 
-    (((0) 4) ((0) 4) ((0) 3) ((3) 2) ((0) 2) ((0) 16) ((0) 17) ((3) 8) ((2) 8) ((0) 20)) 
-    (((2) 4) ((5) 4) ((0) 9) ((1) 9) ((2) 9) ((0) 16) ((4) 16) ((0) 18) ((0) 19) ((0) 20)) 
-    (((0) 4) ((0) 4) ((0) 10) ((0) 16) ((6) 16) ((0) 16) ((0) 21) ((4) 22) ((0) 19) ((0) 20)) 
-    (((0) 10) ((0) 10) ((0) 10) ((6) 14) ((0) 14) ((0) 21) ((0) 21) ((0) 22) ((0) 19) ((0) 20)) 
-    (((0) 11) ((5) 10) ((0) 10) ((2) 14) ((0) 15) ((5) 22) ((0) 22) ((0) 22) ((0) 23) ((0) 20)) 
-    (((0) 11) ((0) 12) ((7) 14) ((0) 14) ((5) 14) ((0) 14) ((0) 22) ((0) 23) ((0) 23) ((0) 20)) 
-    (((0) 11) ((2) 12) ((0) 12) ((0) 13) ((4) 13) ((1) 13) ((0) 13) ((0) 23) ((3) 23) ((6) 23))
+    (((0) 0) ((6) 1) ((2) 2) ((0) 2) ((0) 3) ((0) 4) ((1) 4) ((2) 4))
+    (((4) 1) ((3) 1) ((0) 2) ((0) 2) ((7) 5) ((0) 5) ((0) 5) ((0) 5))
+    (((0) 1) ((1) 1) ((0) 1) ((0) 6) ((0) 6) ((0) 5) ((0) 5) ((0) 7))
+    (((0) 8) ((0) 8) ((0) 8) ((0) 9) ((1) 10) ((0) 10) ((4) 5) ((0) 7))
+    (((0) 11) ((0) 11) ((3) 8) ((0) 9) ((2) 9) ((5) 14) ((3) 18) ((0) 18))
+    (((4) 11) ((0) 12) ((1) 12) ((0) 15) ((0) 14) ((3) 14) ((0) 17) ((0) 18))
+    (((0) 11) ((0) 13) ((0) 13) ((0) 15) ((0) 14) ((0) 14) ((6) 14) ((0) 18))
+    (((2) 11) ((5) 11) ((0) 16) ((3) 16) ((1) 16) ((2) 16) ((0) 16) ((1) 18))
   )
 )
 
@@ -139,6 +137,24 @@
   )
 )
 
+(defun neighboursValues (board elem)
+  (let (
+      (idx (getElemIdx elem))
+      (aux)
+    )
+    (loop for index in (list (- idx 1) (+ idx 1) (- idx (len board)) (+ idx (len board)))
+      do (let ((el (getElemByIdx board index)))
+        (if el
+          (if (single (getElemValues el))
+            (push (getElemValues (getElemValues el)) aux)
+          )
+        )
+      )
+    )
+    aux
+  )
+)
+
 (defun defineChoices (elem board)
   (if (= (getElemValues (getElemValues elem)) 0)
     (let
@@ -146,10 +162,17 @@
         (initialList (fillList (len (filterByGroupId board (getElemId elem)))))
         (existingValues (valuesInGroup board (getElemId elem)))
       )
-      (list (difference initialList existingValues) (getElemId elem) (getElemIdx elem))
+      (list
+        (difference (difference initialList existingValues) (neighboursValues board elem))
+        (getElemId elem)
+        (getElemIdx elem)
+      )
     )
     (list 
-      (difference (getElemValues elem) (valuesInGroup board (getElemId elem)))
+      (difference
+        (difference (getElemValues elem) (valuesInGroup board (getElemId elem)))
+        (neighboursValues board elem)
+      )
       (getElemId elem)
       (getElemIdx elem)
     )
@@ -338,7 +361,7 @@
   )
 )
 
-(write-line "Solucao do tabuleiro 6x6") ;17s
+(write-line "Solucao do tabuleiro 6x6")
 (printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board6))))))
-;; (write-line "Solucao do tabuleiro 10x10")
-;; (printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board10))))))
+(write-line "Solucao do tabuleiro 8x8")
+(printMap (formatBoard (searchSolution (possibleChoices (indexBoard (board8))))))
