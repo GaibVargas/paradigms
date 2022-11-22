@@ -1,45 +1,46 @@
 :- use_module(library(clpfd)).
 
-board(6, [[[_,0],[_,1],[4,1],[_,1],[2,3],[_,4]],
-          [[_,0],[_,2],[3,1],[_,3],[_,3],[_,3]],
-          [[1,0],[4,0],[_,5],[4,3],[_,10],[_,10]],
-          [[_,6],[5,7],[_,5],[_,9],[_,9],[2,10]],
-          [[_,6],[_,7],[_,7],[_,8],[3,8],[_,10]],
-          [[6,7],[2,7],[_,7],[2,8],[_,8],[5,8]]]).
+board(6, [[0-_, 1-_, 1-4, 1-_, 3-2,  4-_],
+          [0-_, 2-_, 1-3, 3-_, 3-_,  3-_],
+          [0-1, 0-4, 5-_, 3-4, 10-_, 10-_],
+          [6-_, 7-5, 5-_, 9-_, 9-_,  10-2],
+          [6-_, 7-_, 7-_, 8-_, 8-3,  10-_],
+          [7-6, 7-2, 7-_, 8-2, 8-_,  8-5]]).
 
 groupSizeList(_, [], 0).
-groupSizeList(X, [H|T], C) :- nth0(1, H, X), groupSizeList(X, T, CT), C is CT + 1.
-groupSizeList(X, [H|T], C) :- nth0(1, H, Id), Id \== X, groupSizeList(X, T, C).
+groupSizeList(X, [H|T], C) :- pairs_keys([H], [X]), groupSizeList(X, T, CT), C is CT + 1.
+groupSizeList(X, [H|T], C) :- pairs_keys([H], [Id]), Id \== X, groupSizeList(X, T, C).
 
 groupSize(_, [], 0).
 groupSize(X, [H|T], C) :- groupSizeList(X, H, CT1), groupSize(X, T, CT2), C is CT1 + CT2.
 
-isSameGroup(X, Elem) :- nth0(1, Elem, X).
-groupElementsList(X, L, R) :- include(isSameGroup(X), L, R).
-
-groupElements(_, [], []).
-groupElements(X, [H|T], L) :- groupElementsList(X, H, L1), groupElements(X, T, L2), append(L1, L2, L).
-
-extractElementValue(Elem, Value) :- nth0(0, Elem, Value).
-
-groupValues(L, R) :- maplist(extractElementValue, L, R).
+% isSameGroup(X, Elem) :- nth0(1, Elem, X).
+% groupElementsList(X, L, R) :- include(isSameGroup(X), L, R).
+% 
+% groupElements(_, [], []).
+% groupElements(X, [H|T], L) :- groupElementsList(X, H, L1), groupElements(X, T, L2), append(L1, L2, L).
+% 
+% extractElementValue(Elem, Value) :- nth0(0, Elem, Value).
+% 
+% groupValues(L, R) :- maplist(extractElementValue, L, R).
 
 optionElement(Elem, R) :-
-  nth0(0, Elem, F),
-  number(F),
-  nth0(1, Elem, Id),
-  R = [F,Id].
+  pairs_keys([Elem], Id),
+  pairs_values([Elem], Value),
+  nth0(0, Value, V),
+  number(V),
+  nth0(0, Id, I),
+  R = I-V.
 optionElement(Elem, R) :-
-  nth0(0, Elem, F),
-  not(number(F)),
-  nth0(1, Elem, Id),
+  pairs_values([Elem], Value),
+  not(number(Value)),
+  pairs_keys([Elem], Id),
+  nth0(0, Id, I),
   nb_getval(currentBoard, B),
-  groupSize(Id, B, CT),
-  R = [1..CT,Id].
+  groupSize(I, B, CT),
+  R = I-1..CT.
 
 optionsBoard(B, Ob) :- maplist(maplist(optionElement), B, Ob).
-
-groupById(L,R) :- 
 
 solver6(R) :-
   board(6,B),
