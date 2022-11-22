@@ -23,3 +23,25 @@ groupElements(X, [H|T], L) :- groupElementsList(X, H, L1), groupElements(X, T, L
 extractElementValue(Elem, Value) :- nth0(0, Elem, Value).
 
 groupValues(L, R) :- maplist(extractElementValue, L, R).
+
+optionElement(Elem, R) :-
+  nth0(0, Elem, F),
+  number(F),
+  nth0(1, Elem, Id),
+  R = [F,Id].
+optionElement(Elem, R) :-
+  nth0(0, Elem, F),
+  not(number(F)),
+  nth0(1, Elem, Id),
+  nb_getval(currentBoard, B),
+  groupSize(Id, B, CT),
+  R = [1..CT,Id].
+
+optionsBoard(B, Ob) :- maplist(maplist(optionElement), B, Ob).
+
+groupById(L,R) :- 
+
+solver6(R) :-
+  board(6,B),
+  nb_setval(currentBoard, B),
+  optionsBoard(B,R).
