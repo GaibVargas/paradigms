@@ -20,13 +20,16 @@ board(10, [
   [11-_, 12-2, 12-_, 13-_, 13-4, 13-1, 13-_, 23-_, 23-3, 23-6]
 ]).
 
+% Retorna o número de itens numa lista que possuem a mesma chave (mesmo grupo)
 groupSizeList(_, [], 0).
 groupSizeList(X, [H|T], C) :- pairs_keys([H], [X]), groupSizeList(X, T, CT), C is CT + 1.
 groupSizeList(X, [H|T], C) :- pairs_keys([H], [Id]), Id \== X, groupSizeList(X, T, C).
 
+% Retorna o número de casas de um determinado grupo
 groupSize(_, [], 0).
 groupSize(X, [H|T], C) :- groupSizeList(X, H, CT1), groupSize(X, T, CT2), C is CT1 + CT2.
 
+% Cria as opções possíveis para uma casa do tabuleiro
 optionElement(Elem, R) :-
   pairs_keys([Elem], Id),
   pairs_values([Elem], Value),
@@ -44,8 +47,10 @@ optionElement(Elem, R) :-
   Values in 1..CT,
   R = I-Values.
 
+% Cria as opções possíveis para todas as casas do tabuleiro
 optionsBoard(B, Ob) :- maplist(maplist(optionElement), B, Ob).
 
+% Verifica na lista há itens adjacentes com mesmo valor
 validNeighbours([_]).
 validNeighbours([H1,H2|T]) :-
   pairs_values([H1],V1),
@@ -54,6 +59,7 @@ validNeighbours([H1,H2|T]) :-
   all_distinct(Values),
   validNeighbours([H2|T]).
 
+% Verifica na lista se itens adjacentes de mesma chave (mesmo grupo) estão em ordem decrescente
 decreaseByGroup([_]).
 decreaseByGroup([H1,H2|T]) :-
   pairs_keys([H1],K),
@@ -68,22 +74,30 @@ decreaseByGroup([H1,H2|T]) :-
   K1 \== K2,
   decreaseByGroup([H2|T]).
 
+% Resolve tabuleiros kojun
 solver(X,R) :-
   board(X,B),
   nb_setval(currentBoard, B),
+
+  % Cria tabuleiro com opções possíveis para cada célula
   optionsBoard(B,R),
+
   % Verifica se os grupos não possuem valores repetidos
   flatten(R,Rflat),
   keysort(Rflat, RflatSorted),
   group_pairs_by_key(RflatSorted, RflatGrouped),
   pairs_values(RflatGrouped, RValues),
   maplist(all_distinct, RValues),
+
   % Verifica se vizinhos não possuem valores repetidos
   maplist(validNeighbours, R),
   transpose(R, Columns),
   maplist(validNeighbours, Columns),
+
+  % Verifica se células na mesma coluna e de mesmo grupo tem valor decrescente
   maplist(decreaseByGroup, Columns).
 
+% Printa as linhas do tabuleiro resposta
 printLine([]).
 printLine([E]) :-
   pairs_values([E], [V]),
@@ -93,4 +107,5 @@ printLine([H|T]) :-
   write(V), write(', '),
   printLine(T).
 
+% Ponto de entra para a solução dos tabuleiros kojun
 kojun(X) :- solver(X,R), maplist(printLine, R).
