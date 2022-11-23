@@ -14,16 +14,6 @@ groupSizeList(X, [H|T], C) :- pairs_keys([H], [Id]), Id \== X, groupSizeList(X, 
 groupSize(_, [], 0).
 groupSize(X, [H|T], C) :- groupSizeList(X, H, CT1), groupSize(X, T, CT2), C is CT1 + CT2.
 
-% isSameGroup(X, Elem) :- nth0(1, Elem, X).
-% groupElementsList(X, L, R) :- include(isSameGroup(X), L, R).
-% 
-% groupElements(_, [], []).
-% groupElements(X, [H|T], L) :- groupElementsList(X, H, L1), groupElements(X, T, L2), append(L1, L2, L).
-% 
-% extractElementValue(Elem, Value) :- nth0(0, Elem, Value).
-% 
-% groupValues(L, R) :- maplist(extractElementValue, L, R).
-
 optionElement(Elem, R) :-
   pairs_keys([Elem], Id),
   pairs_values([Elem], Value),
@@ -43,14 +33,36 @@ optionElement(Elem, R) :-
 
 optionsBoard(B, Ob) :- maplist(maplist(optionElement), B, Ob).
 
+validNeighbours([_]).
+validNeighbours([H1,H2|T]) :-
+  pairs_values([H1],V1),
+  pairs_values([H2],V2),
+  append(V1,V2,Values),
+  all_distinct(Values),
+  validNeighbours([H2|T]).
+
+decreaseByGroup([_]).
+decreaseByGroup([H1,H2|T]) :-
+  pairs_keys([H1],K),
+  pairs_keys([H2],K),
+  pairs_values([H1],[V1]),
+  pairs_values([H2],[V2]),
+  V1 > V2,
+  decreaseByGroup([H2|T]).
+
 solver6(R) :-
   board(6,B),
   nb_setval(currentBoard, B),
   optionsBoard(B,R),
+  % Verifica se os grupos não possuem valores repetidos
   flatten(R,Rflat),
   keysort(Rflat, RflatSorted),
   group_pairs_by_key(RflatSorted, RflatGrouped),
   pairs_values(RflatGrouped, RValues),
-  write("RRRRRR"), write(R),
-  write("RVALUES"), write(RValues),
-  maplist(all_distinct, RValues).
+  maplist(all_distinct, RValues),
+  % Verifica se vizinhos não possuem valores repetidos
+  maplist(validNeighbours, R),
+  transpose(R, Columns),
+  maplist(validNeighbours, Columns),
+  maplist(portray_clause, R).
+%  maplist(decreaseByGroup, Columns).
