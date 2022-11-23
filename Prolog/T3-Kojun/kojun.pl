@@ -1,11 +1,24 @@
 :- use_module(library(clpfd)).
 
-board(6, [[0-_, 1-_, 1-4, 1-_, 3-2,  4-_],
-          [0-_, 2-_, 1-3, 3-_, 3-_,  3-_],
+board(6, [[0-_, 1-_, 1-4, 1-_, 3-2, 4-_],
+          [0-_, 2-_, 1-3, 3-_, 3-_, 3-_],
           [0-1, 0-4, 5-_, 3-4, 10-_, 10-_],
-          [6-_, 7-5, 5-_, 9-_, 9-_,  10-2],
-          [6-_, 7-_, 7-_, 8-_, 8-3,  10-_],
-          [7-6, 7-2, 7-_, 8-2, 8-_,  8-5]]).
+          [6-_, 7-5, 5-_, 9-_, 9-_, 10-2],
+          [6-_, 7-_, 7-_, 8-_, 8-3, 10-_],
+          [7-6, 7-2, 7-_, 8-2, 8-_, 8-5]]).
+
+board(10, [
+  [0-_, 0-_, 1-_, 2-_, 5-_, 6-_, 6-4, 7-_, 7-3, 8-5],
+  [0-_, 0-4, 3-_, 2-_, 6-_, 6-_, 7-6, 7-_, 7-_, 8-_],
+  [0-_, 4-_, 3-_, 2-_, 2-2, 6-_, 7-_, 7-4, 8-_, 8-_],
+  [],
+  [],
+  [],
+  [],
+  [],
+  [],
+  []
+]).
 
 groupSizeList(_, [], 0).
 groupSizeList(X, [H|T], C) :- pairs_keys([H], [X]), groupSizeList(X, T, CT), C is CT + 1.
@@ -47,11 +60,25 @@ decreaseByGroup([H1,H2|T]) :-
   pairs_keys([H2],K),
   pairs_values([H1],[V1]),
   pairs_values([H2],[V2]),
-  V1 > V2,
+  V1 #> V2,
+  decreaseByGroup([H2|T]).
+decreaseByGroup([H1,H2|T]) :-
+  pairs_keys([H1],[K1]),
+  pairs_keys([H2],[K2]),
+  K1 \== K2,
   decreaseByGroup([H2|T]).
 
-solver6(R) :-
-  board(6,B),
+printLine([]).
+printLine([E]) :-
+  pairs_values([E], [V]),
+  write(V), nl.
+printLine([H|T]) :-
+  pairs_values([H], [V]),
+  write(V), write(', '),
+  printLine(T).
+
+solver(X,R) :-
+  board(X,B),
   nb_setval(currentBoard, B),
   optionsBoard(B,R),
   % Verifica se os grupos não possuem valores repetidos
@@ -64,5 +91,6 @@ solver6(R) :-
   maplist(validNeighbours, R),
   transpose(R, Columns),
   maplist(validNeighbours, Columns),
-  maplist(portray_clause, R).
-%  maplist(decreaseByGroup, Columns).
+  maplist(decreaseByGroup, Columns).
+
+kojun(X) :- solver(X,R), maplist(printLine, R).
