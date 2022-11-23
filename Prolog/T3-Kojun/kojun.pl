@@ -38,11 +38,19 @@ optionElement(Elem, R) :-
   nth0(0, Id, I),
   nb_getval(currentBoard, B),
   groupSize(I, B, CT),
-  R = I-1..CT.
+  Values in 1..CT,
+  R = I-Values.
 
 optionsBoard(B, Ob) :- maplist(maplist(optionElement), B, Ob).
 
 solver6(R) :-
   board(6,B),
   nb_setval(currentBoard, B),
-  optionsBoard(B,R).
+  optionsBoard(B,R),
+  flatten(R,Rflat),
+  keysort(Rflat, RflatSorted),
+  group_pairs_by_key(RflatSorted, RflatGrouped),
+  pairs_values(RflatGrouped, RValues),
+  write("RRRRRR"), write(R),
+  write("RVALUES"), write(RValues),
+  maplist(all_distinct, RValues).
